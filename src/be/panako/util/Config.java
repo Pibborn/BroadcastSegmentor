@@ -56,21 +56,20 @@ public class Config {
 	 * The file on disk that is used to store the configuration values. 
 	 * On Android this can be stored here: res/raw/
 	 */
-	private final String configrationFileName;
+	private final String configurationFileName;
 	
 	/**
 	 * The values are stored here, in memory.
 	 */
-	private final HashMap<Key,String> configrationStore;
+	private final HashMap<Key,String> configurationStore;
 	
 	/**
 	 * Hidden default constructor. Reads the configured values, or stores the defaults. 
 	 */
-	public Config(){
-		
+	public Config() {
 		//if on android
 		if(onAndroid()){
-			configrationFileName = new File("/sdcard/config.properties").getAbsolutePath();
+			configurationFileName = new File("/sdcard/config.properties").getAbsolutePath();
 		}else{
 			String path = Config.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 			String decodedPath = "";
@@ -80,35 +79,35 @@ public class Config {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			configrationFileName = new File(new File(decodedPath).getParent(),"config.properties").getAbsolutePath();
+			configurationFileName = new File(new File(decodedPath).getParent(),"config.properties").getAbsolutePath();
 		}		
-		configrationStore = new HashMap<Key, String>();
-		if(!FileUtils.exists(configrationFileName)){
-			writeDefaultConfigration();
+		configurationStore = new HashMap<Key, String>();
+		if(!FileUtils.exists(configurationFileName)){
+			writeDefaultConfiguration();
 		}
-		readConfigration();
+		readConfiguration();
 	}
 	
 	/**
 	 * Read configuration from properties file on disk.
 	 */
-	private void readConfigration() {
+	private void readConfiguration() {
 		Properties prop = new Properties();
     	try {
             //Loads a properties file.
-    		FileInputStream inputstream = new FileInputStream(configrationFileName);
+    		FileInputStream inputstream = new FileInputStream(configurationFileName);
     		prop.load(inputstream);
     		inputstream.close();
     		for(Key key : Key.values()){
 				String configuredValue = prop.getProperty(key.name());
-				configrationStore.put(key, configuredValue);				
+				configurationStore.put(key, configuredValue);				
 			}
     	} catch (IOException ex) {
     		ex.printStackTrace();
         }
 	}
 
-	private void writeDefaultConfigration(){
+	private void writeDefaultConfiguration(){
 		Properties prop = new Properties();
 		try {
 			//Set the default properties value.
@@ -116,7 +115,7 @@ public class Config {
 				prop.setProperty(key.name(), key.defaultValue);
 			}
 			//Save the properties to the configuration file.
-			prop.store(new FileOutputStream(configrationFileName), null);
+			prop.store(new FileOutputStream(configurationFileName), null);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 	    }
@@ -132,8 +131,8 @@ public class Config {
 	
 	public static String get(Key key){
 		//re read configuration
-		//getInstance().readConfigration();
-		HashMap<Key,String> store = getInstance().configrationStore;
+		//getInstance().readConfiguration();
+		HashMap<Key,String> store = getInstance().configurationStore;
 		final String value;
 		if(store.get(key)!=null){
 			value = store.get(key).trim();
@@ -164,7 +163,7 @@ public class Config {
 	}
 	
 	public static void set(Key key, String value) {
-		HashMap<Key,String> store = getInstance().configrationStore;
+		HashMap<Key,String> store = getInstance().configurationStore;
 		store.put(key, value);
 	}
 }

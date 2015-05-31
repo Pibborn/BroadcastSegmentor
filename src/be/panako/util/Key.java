@@ -304,9 +304,22 @@ public enum Key{
 	 * If it is set too low, false positives may appear. If it is set too high some real matches
 	 * may be ignored. 
 	 */
-	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3)
-	
-	;
+	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3),
+        
+        /** TODO
+         *  check meaningfulness of default settings
+         */
+        BALPEAKS_SAMPLE_RATE(44100),
+        
+        BALPEAKS_FFT_SIZE(1024),
+        
+        BALPEAKS_FFT_STEP_SIZE(512),
+        
+        BALPEAKS_MIN_FREQ(150),
+        
+        BALPEAKS_MAX_FREQ(12000),
+        
+        BALPEAKS_MAPDB_DATABASE("balpeaks_panako_db");
 	
 	String defaultValue;
 	private Key(String defaultValue){

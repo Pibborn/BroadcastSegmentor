@@ -57,6 +57,7 @@ import be.panako.util.Key;
 import be.panako.util.Trie;
 import be.tarsos.dsp.io.PipeDecoder;
 import be.tarsos.dsp.io.PipedAudioStream;
+import java.util.logging.LogManager;
 
 /**
  * The main starting point for the application. Does some argument parsing and
@@ -106,6 +107,9 @@ public class Panako {
 		String pipeCommand = Config.get(Key.DECODER_PIPE_COMMAND);
 		String pipeLogFile = Config.get(Key.DECODER_PIPE_LOG_FILE);
 		int pipeBuffer = Config.getInt(Key.DECODER_PIPE_BUFFER_SIZE);
+                
+                //uncomment for normal console notification
+                LogManager.getLogManager().reset();
 		
 		//initialize the decoder
 		PipeDecoder decoder = new PipeDecoder(pipeEnvironment, pipeArgument, pipeCommand, pipeLogFile, pipeBuffer);

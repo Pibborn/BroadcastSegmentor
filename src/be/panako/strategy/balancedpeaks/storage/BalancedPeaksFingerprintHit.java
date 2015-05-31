@@ -6,9 +6,15 @@
 package be.panako.strategy.balancedpeaks.storage;
 
 /**
- *
+ * A data structure that describes a 
  * @author Mattia Cerrato <mattia.cerrato@edu.unito.it>
  */
 public class BalancedPeaksFingerprintHit {
+    // the database track's numeric identifier
+    public int identifier;
+    
+    public int matchTime;
+    
+    public int timeOffset;
     
 }

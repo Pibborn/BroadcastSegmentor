@@ -35,6 +35,7 @@
 
 package be.panako.strategy;
 
+import be.panako.strategy.balancedpeaks.BalancedPeaksStrategy;
 import be.panako.strategy.cteq.CteQStrategy;
 import be.panako.strategy.fft.FFTStrategy;
 import be.panako.strategy.ncteq.NCteQStrategy;
@@ -82,6 +83,7 @@ public abstract class Strategy {
 	 * @return An instance of the strategy.
 	 */	
 	private static Strategy strategy;
+        
 	public static Strategy getInstance(){
 		if(strategy == null){
 			if("CTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
@@ -94,7 +96,9 @@ public abstract class Strategy {
 				strategy = new NFFTStrategy();
 			}else if ("NCTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new NCteQStrategy();
-			}
+			}else if ("BALPEAKS".equalsIgnoreCase(Config.get(Key.STRATEGY))) {
+                            strategy = new BalancedPeaksStrategy();
+                        }
 		}
 		return strategy;
 	}

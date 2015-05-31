@@ -35,10 +35,39 @@
 
 package be.panako.strategy.balancedpeaks;
 
-/**
- *
+
+/** ==TODO== 
+ * In a BalancedPeaks strategy, a fingerprint is a pair of spectrogram peaks. 
+ * The fingerprint is identified by its hash value
  * @author Mattia Cerrato <mattia.cerrato@edu.unito.it>
  */
 public class BalancedPeaksFingerprint {
+    // the analysis frame at which the two peaks were detected
+    public int t1;
+    public int t2;
     
+    // the fft bin at which the two peaks were detected
+    public int b1;
+    public int b2;
+    
+    
+    public BalancedPeaksFingerprint(int t1, int t2, int b1, int b2) {
+        this.t1 = t1;
+        this.t2 = t2;
+        this.b1 = b1;
+        this.b2 = b2;
+    }
+    
+    public BalancedPeaksFingerprint(BalancedPeaksEventPoint p1, BalancedPeaksEventPoint p2) {
+        this.t1 = p1.getTime();
+        this.t2 = p2.getTime();
+        this.b1 = p1.getBin();
+        this.b2 = p2.getBin();
+    }
+    
+    public int getHash() {
+        int timeDiff = t2 - t1;
+        
+        return timeDiff;
+    }
 }

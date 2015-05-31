@@ -219,7 +219,7 @@ public class FFTMapDBStorage {
 	}
 	
 	
-public List<FFTFingerprintQueryMatch> getMatches(List<FFTFingerprint> fingerprints, int size) {
+        public List<FFTFingerprintQueryMatch> getMatches(List<FFTFingerprint> fingerprints, int size) {
 	
 		StopWatch w = new StopWatch();
 		Set<FFTFingerprintHit> allHits = new HashSet<FFTFingerprintHit>();	

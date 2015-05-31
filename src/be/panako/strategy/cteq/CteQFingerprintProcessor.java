@@ -125,9 +125,10 @@ public class CteQFingerprintProcessor implements AudioProcessor {
 	 */
 	final float[] kernel;
 	 
-	 public CteQFingerprintProcessor(int eventPointsPerSecond,int branchingFactor){
-		 this(eventPointsPerSecond,branchingFactor,false);
-	 }
+	public CteQFingerprintProcessor(int eventPointsPerSecond,int branchingFactor){
+            this(eventPointsPerSecond,branchingFactor,false);
+	}
+        
 	public CteQFingerprintProcessor(int eventPointsPerSecond,int branchingFactor,boolean keepOriginalSpectrogram){
 		this(eventPointsPerSecond,branchingFactor,keepOriginalSpectrogram,Config.getInt(Key.CTEQ_STEP_SIZE),Config.getInt(Key.CTEQ_BINS_PER_OCTAVE),Config.getInt(Key.CTEQ_MIN_FREQ),Config.getInt(Key.CTEQ_MAX_FREQ));
 	}
