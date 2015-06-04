@@ -39,4 +39,9 @@ public class BalancedPeaksMapDBStorage {
         List<FFTFingerprintQueryMatch> matchesList = new ArrayList<>();
         return matchesList;
     }
+
+    public boolean hasDescription(String description) {
+        // non c'è il controllo dei duplicati nel database, per ora. TODO
+        return false;
+    }
 }

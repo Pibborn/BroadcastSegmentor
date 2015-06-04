@@ -40,24 +40,30 @@ package be.panako.strategy.balancedpeaks;
  * @author Mattia Cerrato <mattia.cerrato@edu.unito.it>
  */
 class BalancedPeaksEventPoint {
-    // time at which the peak was detected
-    public int t;
+    // time-frame at which the peak was detected
+    public int time;
     
     // fft bin at which the peak was detected
-    public int b;
+    public int bin;
     
-    public BalancedPeaksEventPoint(int t, int b) {
-        this.t = t;
-        this.b = b;
+    // magnitude of the peak
+    public float magnitude;
+            
+    public BalancedPeaksEventPoint(int t, int b, float magnitude) {
+        this.time = t;
+        this.bin = b;
+        this.magnitude = magnitude;
     }
 
     public int getTime() {
-        return t;
+        return time;
     }
 
     public int getBin() {
-        return b;
+        return bin;
     }
     
-    
+    public String toString() {
+        return "t: "+time+"; b: "+bin+"; m: "+magnitude;
+    }
 }

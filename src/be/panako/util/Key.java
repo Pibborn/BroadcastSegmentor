@@ -319,6 +319,8 @@ public enum Key{
         
         BALPEAKS_MAX_FREQ(12000),
         
+        BALPEAKS_BANDS(4),
+        
         BALPEAKS_MAPDB_DATABASE("balpeaks_panako_db");
 	
 	String defaultValue;

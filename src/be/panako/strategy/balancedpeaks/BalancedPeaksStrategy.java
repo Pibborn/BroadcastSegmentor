@@ -40,14 +40,23 @@ import be.panako.strategy.Strategy;
 import be.panako.strategy.balancedpeaks.storage.BalancedPeaksFingerprintHit;
 import be.panako.strategy.balancedpeaks.storage.BalancedPeaksFingerprintQueryMatch;
 import be.panako.strategy.balancedpeaks.storage.BalancedPeaksMapDBStorage;
+import be.panako.util.Config;
+import be.panako.util.FileUtils;
+import be.panako.util.Key;
+import be.tarsos.dsp.AudioDispatcher;
+import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
 /**
  *
  * @author Mattia Cerrato <mattia.cerrato@edu.unito.it>
  */
 public class BalancedPeaksStrategy extends Strategy {
-    
+    private final static Logger LOG = Logger.getLogger(BalancedPeaksStrategy.class.getName());
+
     private final BalancedPeaksMapDBStorage storage;
 
     public BalancedPeaksStrategy() {
@@ -56,8 +65,28 @@ public class BalancedPeaksStrategy extends Strategy {
     
     @Override
     public double store(String resource, String description) {
-        double durationInSeconds = 0.0f;
+        double durationInSeconds;
+        final int identifier = FileUtils.getIdentifier(resource);
         System.out.println("hello store!");
+        if (storage.hasDescription(description)) {
+            LOG.warning("Skipping "+resource+" store: already in database");
+            durationInSeconds = -1;
+        }
+        else {            
+            int samplerate = Config.getInt(Key.BALPEAKS_SAMPLE_RATE);
+            int size = Config.getInt(Key.BALPEAKS_FFT_SIZE);
+            int overlap = size - Config.getInt(Key.BALPEAKS_FFT_STEP_SIZE);
+            AudioDispatcher dispatcher = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
+            final BalancedPeaksEventPointProcessor peakExtractor = new BalancedPeaksEventPointProcessor(size, overlap, samplerate);
+            dispatcher.addAudioProcessor(peakExtractor);
+            dispatcher.run();
+            List<BalancedPeaksEventPoint> peakList = peakExtractor.getPeaks();
+//            for (BalancedPeaksEventPoint peak : peakList) {
+//                System.out.println(peak);
+//            }
+            Set<BalancedPeaksFingerprint> fingerprintSet = new HashSet<>();
+            return -1;
+        }
         return durationInSeconds;
     }
     
@@ -73,7 +102,7 @@ public class BalancedPeaksStrategy extends Strategy {
 
     @Override
     public void printStorageStatistics() {
-        System.out.println("Unsupported operation as of now.");
+        throw new UnsupportedOperationException("Unsupported as of now.");
     }
     
     @Override
