@@ -50,6 +50,7 @@ public class BalancedPeaksFingerprint {
     public int b1;
     public int b2;
     
+    private int hash;
     
     public BalancedPeaksFingerprint(int t1, int t2, int b1, int b2) {
         this.t1 = t1;
@@ -64,10 +65,46 @@ public class BalancedPeaksFingerprint {
         this.b1 = p1.getBin();
         this.b2 = p2.getBin();
     }
-    
-    public int getHash() {
+
+    public void generateHash() {
+        final int fixedBinaryLength = 10;
+        int binaryLengthDiff;
         int timeDiff = t2 - t1;
         
-        return timeDiff;
+        // convert the time difference between the peaks to 10-bit binary string
+        String timeDiffBinary = Integer.toBinaryString(timeDiff);
+        binaryLengthDiff = fixedBinaryLength - timeDiffBinary.length();
+        for (int i = 0; i < binaryLengthDiff; i++) {
+            timeDiffBinary = "0" + timeDiffBinary;
+        }
+        assert timeDiffBinary.length() == 10;
+        
+        // do the same for the anchor peak bin...
+        String b1Binary = Integer.toBinaryString(b1);
+        binaryLengthDiff = fixedBinaryLength - b1Binary.length();
+        for (int i = 0; i < binaryLengthDiff; i++) {
+            b1Binary = "0" + b1Binary;
+        }
+        assert b1Binary.length() == 10;
+        
+        // ... and for the coupled peak bin
+        String b2Binary = Integer.toBinaryString(b2);
+        binaryLengthDiff = fixedBinaryLength - b2Binary.length();
+        for (int i = 0; i < binaryLengthDiff; i++) {
+            b2Binary = "0" + b2Binary;
+        }
+        if (b2Binary.length() > 10) {
+            System.out.println(b2);
+            System.out.println(t2);
+            System.out.println(b2Binary.length());
+        }
+        
+        // simply concat the 3 binary strings and convert the result into an integer. 2^30 possible hash values.
+        String binaryHash = b1Binary + b2Binary + timeDiffBinary;
+        this.hash = Integer.parseInt(binaryHash, 2);
+    }
+    
+    public int getHash() {
+        return hash;
     }
 }

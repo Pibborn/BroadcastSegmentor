@@ -321,6 +321,8 @@ public enum Key{
         
         BALPEAKS_BANDS(4),
         
+        BALPEAKS_LOOKAHEAD(16),
+        
         BALPEAKS_MAPDB_DATABASE("balpeaks_panako_db");
 	
 	String defaultValue;

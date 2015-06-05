@@ -27,6 +27,7 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     int maxFreq;
     int numBands;
     int stepSize;
+    int lookahead;
     
     private FFT fft;
     private List<BalancedPeaksEventPoint> peakList = new ArrayList<>();
@@ -37,10 +38,11 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     private float[][] phases;
     private int frame;
 
-    BalancedPeaksEventPointProcessor(int size, int overlap, int samplerate) {
+    BalancedPeaksEventPointProcessor(int size, int overlap, int samplerate, int lookahead) {
         this.fftSize = size;
         this.fftOverlap = overlap;
         this.samplerate = samplerate;
+        this.lookahead = lookahead;
         
         this.fft = new FFT(size, new HammingWindow());
         this.minFreq = Config.getInt(Key.BALPEAKS_MIN_FREQ);
@@ -56,15 +58,20 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     
     @Override
     public boolean process(AudioEvent event) {
+        //skipping the first frame due to a bug in the TarsosDSP's FFT algorithm.
+        //have to upgrade to a more recent version to see if it works.
+        if (frame == 1) {
+            frame++;
+            return true;
+        } 
+        
         float[] audio = event.getFloatBuffer();
         
+        //copy the audio buffer, to avoid overwriting it
         float[] audioCopy = audio.clone();
-        //calculate the fft
-//        fft.forwardTransform(audio);
-
-        fft.powerPhaseFFT(audioCopy, magnitudes[frame], phases[frame]);
+        
         //store the magnitudes (moduli) in magnitudes
-//        fft.powerAndPhaseFromFFT(audio, magnitudes[frame], phases[frame]);
+        fft.powerPhaseFFT(audioCopy, magnitudes[frame], phases[frame]);
         
         //separate the magnitude array in equal parts and extract the highest peaks from each part
         framePeakList = extractBalancedPeaks(magnitudes[frame]);
@@ -77,12 +84,27 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     
     @Override
     public void processingFinished() {
-//        packEventPointsIntoFingerprints();
+        packEventPointsIntoFingerprints();
         System.out.println("Hello fingerprint extraction!");
     }
 
+    /**
+     * 
+     */
     private void packEventPointsIntoFingerprints() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for (int i = 0; i < peakList.size(); i++) {
+            BalancedPeaksEventPoint anchorPeak = peakList.get(i);
+            for (int j = 1; j < this.lookahead; j++) {
+                if (i + j >= peakList.size()) {
+                    break;
+                }
+                BalancedPeaksEventPoint coupledPeak = peakList.get(i+j);
+                BalancedPeaksFingerprint fingerprint = new BalancedPeaksFingerprint(anchorPeak.getTime(), coupledPeak.getTime(), 
+                        anchorPeak.getBin(), coupledPeak.getBin());
+                fingerprint.generateHash();
+                fingerprintList.add(fingerprint);
+            }
+        }
     }
 
     private List<BalancedPeaksEventPoint> extractBalancedPeaks(float[] magnitudes) {
@@ -112,7 +134,11 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     }
     
     public float[][] getMagnitudes() {
-        return this.magnitudes;
+        return this.magnitudes; 
+    }
+
+    List<BalancedPeaksFingerprint> getFingerprints() {
+        return fingerprintList;
     }
     
 }

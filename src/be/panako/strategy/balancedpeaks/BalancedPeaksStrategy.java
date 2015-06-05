@@ -45,6 +45,9 @@ import be.panako.util.FileUtils;
 import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,14 +79,16 @@ public class BalancedPeaksStrategy extends Strategy {
             int samplerate = Config.getInt(Key.BALPEAKS_SAMPLE_RATE);
             int size = Config.getInt(Key.BALPEAKS_FFT_SIZE);
             int overlap = size - Config.getInt(Key.BALPEAKS_FFT_STEP_SIZE);
+            int lookahead = Config.getInt(Key.BALPEAKS_LOOKAHEAD);
             AudioDispatcher dispatcher = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
-            final BalancedPeaksEventPointProcessor peakExtractor = new BalancedPeaksEventPointProcessor(size, overlap, samplerate);
+            final BalancedPeaksEventPointProcessor peakExtractor = new BalancedPeaksEventPointProcessor(size, overlap, samplerate, lookahead);
             dispatcher.addAudioProcessor(peakExtractor);
             dispatcher.run();
             List<BalancedPeaksEventPoint> peakList = peakExtractor.getPeaks();
-//            for (BalancedPeaksEventPoint peak : peakList) {
-//                System.out.println(peak);
-//            }
+            List<BalancedPeaksFingerprint> fingerprintList = peakExtractor.getFingerprints();
+            toTextFile(fingerprintList, "../test-fingerprints.txt");
+            
+            // why did I put this here again?
             Set<BalancedPeaksFingerprint> fingerprintSet = new HashSet<>();
             return -1;
         }
@@ -114,7 +119,7 @@ public class BalancedPeaksStrategy extends Strategy {
     @Override
     public boolean hasResource(String resource) {
         // ancora cose sulla concorrenza e le risorse (le entry di una hashmap, mi pare). TODO
-        
+
         // ritorno false in modo che - per ora - non vengano mai percepiti i duplicati nel db
         // (che poi non esiste). TODO
 
@@ -124,5 +129,18 @@ public class BalancedPeaksStrategy extends Strategy {
     @Override
     public void monitor(String query, final int maxNumberOfReqults, final QueryResultHandler handler) {
         // di nuovo get dell'istanza del dbcontroller?
+    }
+
+    private void toTextFile(List<BalancedPeaksFingerprint> fingerprintList, String path) {
+        try {
+            PrintWriter writer = new PrintWriter(new File(path));
+            writer.format("%10s %10s %10s %10s\n", "Bin1", "Bin2", "timeDiff", "hash");
+            for(BalancedPeaksFingerprint fingerprint : fingerprintList) {
+                writer.format("%10d %10d %10d %10d\n", fingerprint.b1, fingerprint.b2, 
+                        fingerprint.t2 - fingerprint.t1, fingerprint.getHash());
+            }
+        } catch(FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
