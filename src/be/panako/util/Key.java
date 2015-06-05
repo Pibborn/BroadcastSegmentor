@@ -121,7 +121,7 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, CTEQ|FFT.
 	 */
-	STRATEGY("CTEQ"),
+	STRATEGY("BALPEAKS"),
 	
 
 	/**

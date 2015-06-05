@@ -59,7 +59,7 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     @Override
     public boolean process(AudioEvent event) {
         //skipping the first frame due to a bug in the TarsosDSP's FFT algorithm.
-        //have to upgrade to a more recent version to see if it works.
+        //have to upgrade to a more recent version to see if it fixed. 
         if (frame == 1) {
             frame++;
             return true;
