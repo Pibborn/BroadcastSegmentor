@@ -40,14 +40,6 @@ package be.panako.util;
  * default values.
  * @author Joren Six
  */
-/**
- * @author joren
- *
- */
-/**
- * @author joren
- *
- */
 public enum Key{
 	/**
 	 * Checks the data store if the file # is already added. Set this to

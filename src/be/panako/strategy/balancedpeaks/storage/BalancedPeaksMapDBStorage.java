@@ -24,7 +24,7 @@ public class BalancedPeaksMapDBStorage {
     private final DB db;
     
     private BalancedPeaksMapDBStorage() {
-        File dbFile = new File(Config.get(Key.FFT_MAPDB_DATABASE));
+        File dbFile = new File(Config.get(Key.BALPEAKS_MAPDB_DATABASE));
         db = DBMaker.newFileDB(dbFile)
 					.closeOnJvmShutdown() // close the database automatically
 					.make();
