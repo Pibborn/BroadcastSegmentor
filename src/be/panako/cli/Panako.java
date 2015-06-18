@@ -97,6 +97,7 @@ public class Panako {
 		return currentApplication;
 	}
 	
+        private final static File segmentationOutput = new File("broadcast-segmentation");
 
 	public Panako() {
 		//Initialize configuration:
@@ -312,10 +313,9 @@ public class Panako {
                 return header;
 	}
         
-        static void analyzeQueryResult(Strategy strategy, QueryResult result) {
-            File segmentationOutput = new File("broadcast-segmentation");
+        public static void analyzeQueryResult(Strategy strategy, QueryResult result) {
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(segmentationOutput));
+                BufferedWriter writer = new BufferedWriter(new FileWriter(segmentationOutput, true));
                 String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
                 writer.write(timeStamp+"\n");
                 if (result.score > 0) {
@@ -327,7 +327,7 @@ public class Panako {
                 LOG.severe("IOException @ analyzeQueryResult");
                 e.printStackTrace();
             }
-            System.out.println(printQueryResult("query-test", result));
+//            System.out.println(printQueryResult("query-test", result));
         }
 
 	/**

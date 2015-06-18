@@ -35,6 +35,7 @@
 
 package be.panako.strategy.balancedpeaks;
 
+import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.balancedpeaks.storage.BalancedPeaksFingerprintHit;
@@ -96,7 +97,7 @@ public class BalancedPeaksStrategy extends Strategy {
     }
     
     @Override
-    public boolean query(String query, final int maxNumberOfResults, QueryResultHandler handler) {
+    public QueryResult query(String query, final int maxNumberOfResults, QueryResultHandler handler) {
         // di nuovo get dell'istanza del dbcontroller?
         
         final List<BalancedPeaksFingerprintQueryMatch> queryMatchList = new ArrayList<>();
@@ -104,7 +105,7 @@ public class BalancedPeaksStrategy extends Strategy {
         System.out.println("hello query!");
         // da capire: queryhandler, riga 129 di fftstrategy
         
-        return false;
+        return null;
     }
 
     @Override
