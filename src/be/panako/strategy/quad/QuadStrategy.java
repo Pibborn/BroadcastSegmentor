@@ -35,6 +35,7 @@
 
 package be.panako.strategy.quad;
 
+import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 
@@ -55,10 +56,10 @@ public class QuadStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public QueryResult query(String query, int maxNumberOfResults,
 			QueryResultHandler handler) {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 
 	@Override

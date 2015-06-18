@@ -57,6 +57,12 @@ import be.panako.util.Key;
 import be.panako.util.Trie;
 import be.tarsos.dsp.io.PipeDecoder;
 import be.tarsos.dsp.io.PipedAudioStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.logging.LogManager;
 
 /**
@@ -73,6 +79,8 @@ public class Panako {
 	 * A static string describing the default microphone. It is used in the monitor command.
 	 */
 	public final static String DEFAULT_MICROPHONE = "DEFAULT_MICROPHONE";
+
+        
 	
 	/**
 	 * A map of applications, maps the name of the application to the instance.
@@ -289,18 +297,38 @@ public class Panako {
 	}
 	
 	
-	public static void printQueryResult(String query,QueryResult r){
+	public static String printQueryResult(String query,QueryResult r){
 		String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
 		String matchInfo = String.format("%s;%s;%.0f;%.0f;", r.identifier,r.description,r.time,r.score);
 		String factorInfo = String.format("%.0f%%;%.0f%%", r.timeFactor,r.frequencyFactor);
-		System.out.println(queryInfo+matchInfo+factorInfo);
+//		System.out.println(queryInfo+matchInfo+factorInfo);
+                return queryInfo+matchInfo+factorInfo;
 	}
 	
-	public static void printQueryResultHeader(){
+	public static String printQueryResultHeader(){
 		String header;
 		header = "Query;Query start (s);Query stop (s); Match Identifier;Match description; Match start (s); Match score; Time factor (%); Frequency factor(%)"; 
 		System.out.println(header);
+                return header;
 	}
+        
+        static void analyzeQueryResult(Strategy strategy, QueryResult result) {
+            File segmentationOutput = new File("broadcast-segmentation");
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(segmentationOutput));
+                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                writer.write(timeStamp+"\n");
+                if (result.score > 0) {
+                    writer.write(result.description + "; score:" + result.score + "; time:"+ result.time + 
+                            "; match time start:"+ result.queryTimeOffsetStart + "; match time stop:"+ result.queryTimeOffsetStop);
+                }
+                writer.close();
+            }catch(IOException e) {
+                LOG.severe("IOException @ analyzeQueryResult");
+                e.printStackTrace();
+            }
+            System.out.println(printQueryResult("query-test", result));
+        }
 
 	/**
 	 * Starts the Panako application. It is the main (and only) entry point.

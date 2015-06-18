@@ -100,17 +100,18 @@ public class Query extends Application{
 		@Override
 		public void run() {
 			Strategy strategy = Strategy.getInstance();
-			strategy.query(file.getAbsolutePath(), 3, this);
+			QueryResult result = strategy.query(file.getAbsolutePath(), 3, this);
+                        Panako.analyzeQueryResult(strategy, result);
 		}
 		
 		@Override
-		public void handleQueryResult(QueryResult r) {
-			Panako.printQueryResult(file.getAbsolutePath(), r);
+		public String handleQueryResult(QueryResult r) {
+			return Panako.printQueryResult(file.getAbsolutePath(), r);
 		}
 
 		@Override
-		public void handleEmptyResult(QueryResult r) {
-			Panako.printQueryResult(file.getAbsolutePath(), r);	
+		public String handleEmptyResult(QueryResult r) {
+			return Panako.printQueryResult(file.getAbsolutePath(), r);	
 		}
 	}	
 	

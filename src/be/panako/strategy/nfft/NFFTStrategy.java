@@ -105,7 +105,7 @@ public class NFFTStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public QueryResult query(String query, int maxNumberOfResults,
 			QueryResultHandler handler) {
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
@@ -132,6 +132,7 @@ public class NFFTStrategy extends Strategy {
 				handler.handleQueryResult(new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
 			}
 		}
+                return null;
 	}
 
 	@Override

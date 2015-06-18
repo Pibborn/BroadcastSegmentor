@@ -160,7 +160,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 	
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public QueryResult query(String query, int maxNumberOfResults,
 			QueryResultHandler handler) {
 		
 		String directory = Config.get(Key.PCH_FILES);
@@ -199,6 +199,8 @@ public class PitchClassHistogramStrategy extends Strategy {
 				handled++;
 			}
 		}
+                
+                return null;
 		
 	}
 

@@ -56,7 +56,7 @@ public abstract class Strategy {
 	 */
 	public abstract double store(String resource, String description);
 	
-	public abstract void query(String query, int maxNumberOfResults, QueryResultHandler handler);
+	public abstract QueryResult query(String query, int maxNumberOfResults, QueryResultHandler handler);
 	
 	public abstract void monitor(String query,int maxNumberOfReqults,QueryResultHandler handler);
 	

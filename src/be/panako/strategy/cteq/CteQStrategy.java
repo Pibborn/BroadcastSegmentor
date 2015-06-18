@@ -99,7 +99,7 @@ public class CteQStrategy extends Strategy {
 	}
 
 
-	public void query(String query, int maxNumberOfResults, QueryResultHandler handler){
+	public QueryResult query(String query, int maxNumberOfResults, QueryResultHandler handler){
 		CteQFingerprintProcessor constantQ;
 		final int eventPointsPerSecondForQuery = Config.getInt(Key.CTEQ_EVENT_POINTS_PER_SECOND_FOR_QUERY);
 			
@@ -130,7 +130,7 @@ public class CteQStrategy extends Strategy {
 			}
 		}
 			
-
+                return null;
 	}
 	
 	public boolean isStorageAvailable() {

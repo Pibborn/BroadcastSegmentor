@@ -97,7 +97,7 @@ public class FFTStrategy extends Strategy{
 		return durationInSeconds;
 	}
 	
-	public void query(String query, final int maxNumberOfResults, QueryResultHandler handler){
+	public QueryResult query(String query, final int maxNumberOfResults, QueryResultHandler handler){
 	
 		final FFTMapDBStorage storage = FFTMapDBStorage.getInstance();
 		
@@ -123,16 +123,20 @@ public class FFTStrategy extends Strategy{
 		d.run();
 		
 		double queryDuration = d.secondsProcessed();
-		
+		boolean hasAMatch = !queryMatches.isEmpty();
+                QueryResult result = null;
 		if(queryMatches.isEmpty()){
-			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
+			result = QueryResult.emptyQueryResult(0,queryDuration);
 			handler.handleEmptyResult(result);
 		}else{
 			for(FFTFingerprintQueryMatch match : queryMatches){
 				String description = storage.getAudioDescription(match.identifier);
 				handler.handleQueryResult(new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
-			}
+                                result = new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0);
+                        }
 		}
+                
+                return result;
 	}
 
 	@Override

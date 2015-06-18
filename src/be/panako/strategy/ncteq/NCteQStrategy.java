@@ -111,7 +111,7 @@ public class NCteQStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public QueryResult query(String query, int maxNumberOfResults,
 			QueryResultHandler handler) {
 		
 		ConstantQ constantQ = createConstantQ();
@@ -143,6 +143,8 @@ public class NCteQStrategy extends Strategy {
 				handler.handleQueryResult(result);
 			}
 		}
+                
+                return null;
 	}
 
 	@Override
