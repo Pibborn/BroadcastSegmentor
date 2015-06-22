@@ -399,7 +399,7 @@ public class Panako {
                 matchEnd = Integer.parseInt(clipTimes[clipTimes.length-2]);
                 boolean overlap = matchStart <= (oldMatchEnd+15);
                 segmentOngoing = segmentOngoing && overlap;
-                System.out.println(matchStart+" "+(oldMatchEnd+15)+ " " + overlap);
+//                System.out.println(matchStart+" "+(oldMatchEnd+15)+ " " + overlap);
                 String matchedTrack = result.description;
                 
 //                if (i == 0) {
