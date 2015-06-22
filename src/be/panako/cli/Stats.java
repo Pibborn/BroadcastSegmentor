@@ -88,4 +88,9 @@ public class Stats extends Application {
 	public boolean writesToStorage() {
 		return false;
 	}
+        
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
 }

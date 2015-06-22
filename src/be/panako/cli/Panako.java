@@ -51,9 +51,11 @@ import java.util.jar.Manifest;
 import java.util.logging.Logger;
 
 import be.panako.strategy.QueryResult;
+import be.panako.strategy.QueryResultWithMatchName;
 import be.panako.strategy.Strategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
+import be.panako.util.TimeUnit;
 import be.panako.util.Trie;
 import be.tarsos.dsp.io.PipeDecoder;
 import be.tarsos.dsp.io.PipedAudioStream;
@@ -61,9 +63,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.logging.LogManager;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The main starting point for the application. Does some argument parsing and
@@ -75,10 +80,22 @@ public class Panako {
 	
 	private final static Logger LOG = Logger.getLogger(Panako.class.getName());
 	
+        private final static File fingerprintingOutput = new File("fingerprint-detection.log");
+        
+        private final static File segmentationOutput = new File("broadcast-segmentation.log");
+
+        private static BufferedWriter segmentationWriter;
+        
+        private static BufferedWriter fingerprintWriter;
+        
+        public static List<QueryResultWithMatchName> queryResultList = new ArrayList<>();
+        
 	/**
 	 * A static string describing the default microphone. It is used in the monitor command.
 	 */
 	public final static String DEFAULT_MICROPHONE = "DEFAULT_MICROPHONE";
+
+    
 
         
 	
@@ -97,7 +114,6 @@ public class Panako {
 		return currentApplication;
 	}
 	
-        private final static File segmentationOutput = new File("broadcast-segmentation");
 
 	public Panako() {
 		//Initialize configuration:
@@ -194,7 +210,7 @@ public class Panako {
 		
 	}
 
-	private void actuallyStartApplication(String application,	String[] applicationArguments) {
+	private void actuallyStartApplication(String application, String[] applicationArguments) {
 		
 		if (!applications.containsKey(application)) {
 			Collection<String> completions = applicationTrie.autoComplete(application);
@@ -216,18 +232,34 @@ public class Panako {
 				System.out.println("\t" + app.description());				
 			}else{
 				Panako.currentApplication = app;
+                                if(app.writesToFile()) {
+                                    try {
+                                        segmentationWriter = new BufferedWriter(new FileWriter(segmentationOutput));
+                                        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                                        segmentationWriter.write(timeStamp+"\n");
+                                        segmentationWriter.flush();
+                                        if (Config.getBoolean(Key.DEBUG)) {
+                                            fingerprintWriter = new BufferedWriter(new FileWriter(fingerprintingOutput));
+                                            fingerprintWriter.write(timeStamp+"\n");
+                                            fingerprintWriter.flush();
+                                        }
+                                    } catch(IOException e) {
+                                        LOG.severe("IOException @ filewriter file creation");
+                                        e.printStackTrace();
+                                    }
+                                }
 				if(app.needsStorage()){
-					
 					boolean storageIsAvailable = Strategy.getInstance().isStorageAvailable();
 					if(storageIsAvailable){
 						actuallyReallyStartApplication(app,applicationArguments);
 					}else{
-						System.out.println("Storage not availableg!");
+						System.out.println("Storage not available!");
 						System.err.println("Storage not available!");
 					}
 				}else{
 					actuallyReallyStartApplication(app,applicationArguments);
 				}
+                                
 			}
 		} else {			 
 			System.out.println("Unknown application '"+ application + "'. Valid applications are:");
@@ -313,21 +345,118 @@ public class Panako {
                 return header;
 	}
         
-        public static void analyzeQueryResult(Strategy strategy, QueryResult result) {
+        public static void analyzeQueryResult(Strategy strategy, String filePath, QueryResult result) {
             try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(segmentationOutput, true));
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-                writer.write(timeStamp+"\n");
                 if (result.score > 0) {
-                    writer.write(result.description + "; score:" + result.score + "; time:"+ result.time + 
-                            "; match time start:"+ result.queryTimeOffsetStart + "; match time stop:"+ result.queryTimeOffsetStop);
+                    QueryResultWithMatchName resultWithMatchName = new QueryResultWithMatchName(result, filePath);
+                    queryResultList.add(resultWithMatchName);
+                    if (Config.getBoolean(Key.DEBUG)) {
+                        fingerprintWriter.write(filePath + " matched with " + result.description + "\nscore:" + result.score + "; time:"+ result.time + 
+                            "; match time start:"+ result.queryTimeOffsetStart + "; match time stop:"+ result.queryTimeOffsetStop+"\n");
+                        fingerprintWriter.flush();  
+                    }
+                } else {
+//                    if (Config.getBoolean(Key.DEBUG)) {
+//                        writer.write(filePath + " DID NOT match with " + result.description + "\nscore:" + result.score + "; time:"+ result.time + 
+//                            "; match time start:"+ result.queryTimeOffsetStart + "; match time stop:"+ result.queryTimeOffsetStop+"\n");
+//                        writer.flush();
+//                    }
                 }
-                writer.close();
             }catch(IOException e) {
                 LOG.severe("IOException @ analyzeQueryResult");
                 e.printStackTrace();
             }
 //            System.out.println(printQueryResult("query-test", result));
+        }
+        
+        public static void generateSegmentation() {
+            int i = 0;
+            int j = 0;
+            int segmentStart = 0;
+            int segmentEnd = 0;
+            int oldMatchStart = 0;
+            int oldMatchEnd = 0;
+            int matchStart = 0;
+            int matchEnd = 0;
+            boolean segmentOngoing = true;
+            boolean lastSegment = false;
+            
+            for (QueryResultWithMatchName result : queryResultList) {
+                if (queryResultList.indexOf(result) == queryResultList.size()-1) {
+                    lastSegment = true;
+                }
+                        
+                String regex = "_|\\.";
+                String[] clipTimes = result.matchName.split(regex);
+//                if (Config.getBoolean(Key.DEBUG)) {
+//                    for (String time : clipTimes) {
+//                        System.out.println(time);   
+//                    }
+//                }
+                oldMatchStart = matchStart;
+                oldMatchEnd = matchEnd;
+                matchStart = Integer.parseInt(clipTimes[clipTimes.length-3]);
+                matchEnd = Integer.parseInt(clipTimes[clipTimes.length-2]);
+                boolean overlap = matchStart <= (oldMatchEnd+15);
+                segmentOngoing = segmentOngoing && overlap;
+                System.out.println(matchStart+" "+(oldMatchEnd+15)+ " " + overlap);
+                String matchedTrack = result.description;
+                
+//                if (i == 0) {
+//                    segmentStart = matchStart;
+//                    segmentEnd = matchEnd;
+//                    oldMatchEnd = matchEnd;
+//                }
+                
+                if (matchedTrack.contains("Commercial")) {
+                    if (!segmentOngoing || lastSegment) {
+                        // print information for the previous segment
+                        try {
+                            segmentationWriter.write("Commercial Segment Number "+j+":\n");
+
+                            int hours = segmentStart / 3600;
+                            segmentStart -= hours * 3600;
+                            int minutes = segmentStart / 60;
+                            segmentStart -= minutes * 60;
+                            String output = String.format("Start: [%dh::%dm::%ds]\n", hours, minutes, segmentStart);
+                            segmentationWriter.write(output);
+
+                            hours = segmentEnd / 3600;
+                            oldMatchEnd -= hours * 3600;
+                            minutes = segmentEnd / 60;
+                            oldMatchEnd -= minutes * 60;
+                            output = String.format("End: [%dh::%dm::%ds]\n", hours, minutes, oldMatchEnd);
+                            segmentationWriter.write(output);
+
+                            segmentationWriter.flush();
+                            j++;
+                        } catch(IOException e) {
+                            LOG.severe("IOException @ generateSegmentation");
+                            e.printStackTrace();
+                        }
+                        
+                        // start a new segment 
+                        segmentStart = matchStart;
+                        segmentOngoing = true;
+                    }
+                    else {
+                        segmentEnd = matchEnd;
+                    } 
+                } 
+                else {
+                    // TODO Intro/Outro detection
+                }
+//                if (i == 0) {
+//                    try {
+//                        segmentationWriter.write("");
+//                        segmentationWriter.flush();
+//                    } catch(IOException e) {
+//                        LOG.severe("IOException @ generateSegmentation");
+//                        e.printStackTrace();
+//                    }
+//                }
+                i++;
+            }
         }
 
 	/**

@@ -77,13 +77,18 @@ public class Monitor extends Application implements QueryResultHandler {
 	}
 
 	@Override
-	public void handleQueryResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
+	public String handleQueryResult(QueryResult r) {
+		return Panako.printQueryResult(inputResource, r);
 	}
 
 	@Override
-	public void handleEmptyResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
+	public String handleEmptyResult(QueryResult r) {
+		return Panako.printQueryResult(inputResource, r);
 	}
+        
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
 
 }

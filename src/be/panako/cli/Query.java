@@ -66,18 +66,20 @@ public class Query extends Application{
 		
 		Panako.printQueryResultHeader();
 		
-		for(File file: files){
+		for(File file : files){
 			executor.submit(new QueryTask(file));
 		}
 		executor.shutdown();
 		try {
 			//wait for tasks to finish
 			executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
+                        Panako.generateSegmentation();
 			System.exit(0);
 		} catch (InterruptedException e1) {
 			//Thread was interrupted
 			LOG.severe("Did not finish all tasks, thread was interrupted!");
 		}
+                
 	}
 
 	@Override
@@ -101,7 +103,7 @@ public class Query extends Application{
 		public void run() {
 			Strategy strategy = Strategy.getInstance();
 			QueryResult result = strategy.query(file.getAbsolutePath(), 3, this);
-                        Panako.analyzeQueryResult(strategy, result);
+                        Panako.analyzeQueryResult(strategy, file.getAbsolutePath(), result);
 		}
 		
 		@Override
@@ -124,4 +126,9 @@ public class Query extends Application{
 	public boolean writesToStorage() {
 		return false;
 	}
+        
+        @Override
+        public boolean writesToFile() {
+            return true;
+        }
 }

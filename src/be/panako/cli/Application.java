@@ -211,4 +211,6 @@ public abstract class Application {
 	 * @return true if this application writes to storage.
 	 */
 	public abstract boolean writesToStorage() ;
+        
+        public abstract boolean writesToFile();
 }

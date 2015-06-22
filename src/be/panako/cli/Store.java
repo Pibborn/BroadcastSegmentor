@@ -165,4 +165,9 @@ public class Store extends Application {
 	public boolean writesToStorage() {
 		return true;
 	}
+        
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
 }

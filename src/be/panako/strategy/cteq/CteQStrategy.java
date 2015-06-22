@@ -119,18 +119,19 @@ public class CteQStrategy extends Strategy {
 		CteQMapDBStorage storage = CteQMapDBStorage.getInstance();
 		List<CteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(new ArrayList<CteQFingerprint>(fingerprints),maxNumberOfResults);
 		
+                QueryResult result = null;
 		if(matches.isEmpty()){
-			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
+			result = QueryResult.emptyQueryResult(0,queryDuration);
 			handler.handleEmptyResult(result);
 		}else{
 			for(CteQFingerprintQueryMatch match : matches){
 				String description = storage.getAudioDescription(match.identifier);
-				QueryResult result = new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
+				result = new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
 				handler.handleQueryResult(result);
 			}
 		}
 			
-                return null;
+                return result;
 	}
 	
 	public boolean isStorageAvailable() {

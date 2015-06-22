@@ -85,4 +85,8 @@ public class QueryResult {
 	public static QueryResult emptyQueryResult(double queryTimeOffsetStart,double queryTimeOffsetStop){
 		return new QueryResult(queryTimeOffsetStart,queryTimeOffsetStop,null, null, -1, -1,-1,-1);
 	}
+        
+        
 }
+
+

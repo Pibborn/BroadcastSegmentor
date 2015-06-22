@@ -113,7 +113,7 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, CTEQ|FFT.
 	 */
-	STRATEGY("BALPEAKS"),
+	STRATEGY("CTEQ"),
 	
 
 	/**
@@ -315,7 +315,11 @@ public enum Key{
         
         BALPEAKS_LOOKAHEAD(16),
         
-        BALPEAKS_MAPDB_DATABASE("balpeaks_panako_db");
+        BALPEAKS_MAPDB_DATABASE("balpeaks_panako_db"), 
+        
+        DEBUG("TRUE"), 
+        
+        SEGMENTATION_THRESHOLD(25);
 	
 	String defaultValue;
 	private Key(String defaultValue){

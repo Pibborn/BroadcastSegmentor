@@ -55,4 +55,9 @@ public class Compare extends Application {
 		return false;
 	}
 
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
+
 }

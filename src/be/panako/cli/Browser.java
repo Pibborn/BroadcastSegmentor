@@ -98,4 +98,9 @@ public class Browser extends Application {
 		return false;
 	}
 
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
+
 }

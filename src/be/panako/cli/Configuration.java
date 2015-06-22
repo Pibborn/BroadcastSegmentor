@@ -71,4 +71,9 @@ public class Configuration extends Application {
 	public boolean writesToStorage() {
 		return false;
 	}
+        
+        @Override
+        public boolean writesToFile() {
+            return false;
+        }
 }
