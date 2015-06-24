@@ -225,10 +225,10 @@ public class NFFTMapDBStorage {
 	}
 	
 	
-public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints, int size) {
-	
-		StopWatch w = new StopWatch();
-		Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();	
+        public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints, int size) {
+            StopWatch w = new StopWatch();
+            Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();
+            
 	    for(NFFTFingerprint fingerprint: fingerprints){
 	    	int hash = fingerprint.hash();
 	    	Tuple3<Integer,Integer,Integer> fromElement = Fun.t3(hash, null, null);

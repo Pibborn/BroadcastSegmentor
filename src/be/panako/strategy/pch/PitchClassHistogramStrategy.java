@@ -104,7 +104,9 @@ public class PitchClassHistogramStrategy extends Strategy {
 				pch[roundedCentValue] += 1;
 			}
 		}
-		return d.durationInSeconds();
+//		return d.durationInSeconds();
+//              for TarsosDSP2.2 compatibility
+                return 0.0f;
 	}
 	
 	private void storePch(int identifier, String description,int[] pch){

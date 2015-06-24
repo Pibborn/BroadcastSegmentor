@@ -34,7 +34,7 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     private List<BalancedPeaksFingerprint> fingerprintList = new ArrayList<>();
     private List<BalancedPeaksEventPoint> framePeakList = new ArrayList<>();
 
-    private float[][] magnitudes;
+    private float[] magnitudes;
     private float[][] phases;
     private int frame;
 
@@ -50,8 +50,8 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
         this.numBands = Config.getInt(Key.BALPEAKS_BANDS);
         this.stepSize = Config.getInt(Key.BALPEAKS_FFT_STEP_SIZE);
         
-        this.magnitudes = new float[10000][fftSize/2];
-        this.phases = new float[10000][fftSize/2];
+        this.magnitudes = new float[fftSize/2];
+        this.phases = new float[100000][fftSize/2];
         
         this.frame = 0;
     }
@@ -59,7 +59,7 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
     @Override
     public boolean process(AudioEvent event) {
         //skipping the first frame due to a bug in the TarsosDSP's FFT algorithm.
-        //have to upgrade to a more recent version to see if it fixed. 
+        //got to upgrade to a more recent version to see if it is fixed. 
         if (frame == 1) {
             frame++;
             return true;
@@ -71,10 +71,13 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
         float[] audioCopy = audio.clone();
         
         //store the magnitudes (moduli) in magnitudes
-        fft.powerPhaseFFT(audioCopy, magnitudes[frame], phases[frame]);
+//        fft.powerPhaseFFT(audioCopy, magnitudes, phases[frame]);
+    
+        fft.forwardTransform(audioCopy);
+        fft.powerAndPhaseFromFFT(audioCopy, magnitudes, phases[0]);
         
         //separate the magnitude array in equal parts and extract the highest peaks from each part
-        framePeakList = extractBalancedPeaks(magnitudes[frame]);
+        framePeakList = extractBalancedPeaks(magnitudes);
         
         // store the frame peaks in the general list
         peakList.addAll(framePeakList);
@@ -113,18 +116,19 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
         
         BalancedPeaksEventPoint bandPeak;
         framePeakList = new ArrayList<BalancedPeaksEventPoint>();
-        int i = 0; 
         for (int j = 0; j < numBands; j++) {
             float maxMagnitude = Float.MIN_VALUE;
             int maxMagnitudeIndex = -1;
-            for (i = i; i < bandSize * (j+1); i++) {
+            for (int i = 0; i < bandSize * (j+1); i++) {
                 if (magnitudes[i] > maxMagnitude) {
                     maxMagnitude = magnitudes[i];
                     maxMagnitudeIndex = i;
                 } 
             }
-            bandPeak = new BalancedPeaksEventPoint(frame, maxMagnitudeIndex, maxMagnitude);
-            framePeakList.add(bandPeak);
+            if (maxMagnitudeIndex != -1) {
+                bandPeak = new BalancedPeaksEventPoint(frame, maxMagnitudeIndex, maxMagnitude);
+                framePeakList.add(bandPeak);
+            }
         }
         return framePeakList;
     }
@@ -133,7 +137,7 @@ public class BalancedPeaksEventPointProcessor implements AudioProcessor {
         return peakList;
     }
     
-    public float[][] getMagnitudes() {
+    public float[] getMagnitudes() {
         return this.magnitudes; 
     }
 

@@ -71,7 +71,7 @@ public class BalancedPeaksStrategy extends Strategy {
     public double store(String resource, String description) {
         double durationInSeconds;
         final int identifier = FileUtils.getIdentifier(resource);
-        System.out.println("hello store!");
+//        System.out.println("hello store!");
         if (storage.hasDescription(description)) {
             LOG.warning("Skipping "+resource+" store: already in database");
             durationInSeconds = -1;
@@ -87,8 +87,13 @@ public class BalancedPeaksStrategy extends Strategy {
             dispatcher.run();
             List<BalancedPeaksEventPoint> peakList = peakExtractor.getPeaks();
             List<BalancedPeaksFingerprint> fingerprintList = peakExtractor.getFingerprints();
-            toTextFile(fingerprintList, "../test-fingerprints.txt");
+//            toTextFile(fingerprintList, "../test-fingerprints.txt");
             
+//            System.out.println(fingerprintList.size());
+            for(BalancedPeaksFingerprint fingerprint : fingerprintList) {
+                storage.addFingerprint(identifier, fingerprint.t1, fingerprint.getHash());
+            }
+            storage.addAudio(identifier, description);
             // why did I put this here again?
             Set<BalancedPeaksFingerprint> fingerprintSet = new HashSet<>();
             return -1;
@@ -99,8 +104,21 @@ public class BalancedPeaksStrategy extends Strategy {
     @Override
     public QueryResult query(String query, final int maxNumberOfResults, QueryResultHandler handler) {
         // di nuovo get dell'istanza del dbcontroller?
-        
+        double durationInSeconds;
         final List<BalancedPeaksFingerprintQueryMatch> queryMatchList = new ArrayList<>();
+        final int identifier = FileUtils.getIdentifier(query);
+        int samplerate = Config.getInt(Key.BALPEAKS_SAMPLE_RATE);
+        int size = Config.getInt(Key.BALPEAKS_FFT_SIZE);
+        int overlap = size - Config.getInt(Key.BALPEAKS_FFT_STEP_SIZE);
+        int lookahead = Config.getInt(Key.BALPEAKS_LOOKAHEAD);
+        AudioDispatcher dispatcher = AudioDispatcherFactory.fromPipe(query, samplerate, size, overlap);
+        final BalancedPeaksEventPointProcessor peakExtractor = new BalancedPeaksEventPointProcessor(size, overlap, samplerate, lookahead);
+        dispatcher.addAudioProcessor(peakExtractor);
+        dispatcher.run();
+        List<BalancedPeaksEventPoint> peakList = peakExtractor.getPeaks();
+        List<BalancedPeaksFingerprint> fingerprintList = peakExtractor.getFingerprints();
+        
+        List<BalancedPeaksFingerprintQueryMatch> matchList = storage.getMatches(fingerprintList, maxNumberOfResults);
         
         System.out.println("hello query!");
         // da capire: queryhandler, riga 129 di fftstrategy

@@ -66,6 +66,8 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.logging.LogManager;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -341,12 +343,13 @@ public class Panako {
 	public static String printQueryResultHeader(){
 		String header;
 		header = "Query;Query start (s);Query stop (s); Match Identifier;Match description; Match start (s); Match score; Time factor (%); Frequency factor(%)"; 
-		System.out.println(header);
+//		System.out.println(header);
                 return header;
 	}
         
         public static void analyzeQueryResult(Strategy strategy, String filePath, QueryResult result) {
             try {
+//                System.out.println("analyzeQueryResult");
                 if (result.score > 0) {
                     QueryResultWithMatchName resultWithMatchName = new QueryResultWithMatchName(result, filePath);
                     queryResultList.add(resultWithMatchName);
@@ -370,8 +373,9 @@ public class Panako {
         }
         
         public static void generateSegmentation() {
+//            System.out.println("generateSegmentation");
             int i = 0;
-            int j = 0;
+            int j = 1;
             int segmentStart = 0;
             int segmentEnd = 0;
             int oldMatchStart = 0;
@@ -381,7 +385,27 @@ public class Panako {
             boolean segmentOngoing = true;
             boolean lastSegment = false;
             
+            System.out.println("sorting query matches...");
+            Collections.sort(queryResultList, new Comparator<QueryResultWithMatchName>() {
+                public int compare(QueryResultWithMatchName r1, QueryResultWithMatchName r2) {
+                    String regex = "_|\\.";
+                    String[] clipTimes1 = r1.matchName.split(regex);
+                    String[] clipTimes2 = r2.matchName.split(regex);
+                    int start1 = Integer.parseInt(clipTimes1[clipTimes1.length-3]);
+                    int start2 = Integer.parseInt(clipTimes2[clipTimes2.length-3]);
+                    if (start1 < start2) {
+                        return -1;
+                    } else if (start2 > start1) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                }
+            });
+            System.out.println("...done.");
+            
             for (QueryResultWithMatchName result : queryResultList) {
+//                System.out.println(result.toString());
                 if (queryResultList.indexOf(result) == queryResultList.size()-1) {
                     lastSegment = true;
                 }
@@ -397,16 +421,21 @@ public class Panako {
                 oldMatchEnd = matchEnd;
                 matchStart = Integer.parseInt(clipTimes[clipTimes.length-3]);
                 matchEnd = Integer.parseInt(clipTimes[clipTimes.length-2]);
-                boolean overlap = matchStart <= (oldMatchEnd+15);
+                boolean overlap = matchStart <= (oldMatchEnd+30);
                 segmentOngoing = segmentOngoing && overlap;
-//                System.out.println(matchStart+" "+(oldMatchEnd+15)+ " " + overlap);
+//                System.out.println(matchStart+" "+oldMatchEnd+ " " + overlap);
                 String matchedTrack = result.description;
                 
-//                if (i == 0) {
-//                    segmentStart = matchStart;
-//                    segmentEnd = matchEnd;
-//                    oldMatchEnd = matchEnd;
-//                }
+                if (i == 0) {
+                    segmentStart = matchStart;
+                    segmentEnd = matchEnd;
+                    oldMatchEnd = matchEnd;
+                    segmentOngoing = true;
+                }
+                
+                if (lastSegment) {
+                    oldMatchEnd = matchEnd;
+                }
                 
                 if (matchedTrack.contains("Commercial")) {
                     if (!segmentOngoing || lastSegment) {
@@ -415,21 +444,16 @@ public class Panako {
                             segmentationWriter.write("Commercial Segment Number "+j+":\n");
 
                             int hours = segmentStart / 3600;
-                            segmentStart -= hours * 3600;
-                            int minutes = segmentStart / 60;
-                            segmentStart -= minutes * 60;
-                            String output = String.format("Start: [%dh::%dm::%ds]\n", hours, minutes, segmentStart);
+                            int minutes = (segmentStart % 3600) / 60;
+                            String output = String.format("Start: [%02dh::%02dm::%02ds]\n", hours, minutes, segmentStart%60);
                             segmentationWriter.write(output);
 
-                            hours = segmentEnd / 3600;
-                            oldMatchEnd -= hours * 3600;
-                            minutes = segmentEnd / 60;
-                            oldMatchEnd -= minutes * 60;
-                            output = String.format("End: [%dh::%dm::%ds]\n", hours, minutes, oldMatchEnd);
+                            hours = oldMatchEnd / 3600;
+                            minutes = (oldMatchEnd % 3600) / 60;
+                            output = String.format("End: [%02dh::%02dm::%02ds]\n", hours, minutes, oldMatchEnd%60);
                             segmentationWriter.write(output);
 
                             segmentationWriter.flush();
-                            j++;
                         } catch(IOException e) {
                             LOG.severe("IOException @ generateSegmentation");
                             e.printStackTrace();
@@ -438,23 +462,12 @@ public class Panako {
                         // start a new segment 
                         segmentStart = matchStart;
                         segmentOngoing = true;
+                        j++;
                     }
                     else {
                         segmentEnd = matchEnd;
                     } 
-                } 
-                else {
-                    // TODO Intro/Outro detection
                 }
-//                if (i == 0) {
-//                    try {
-//                        segmentationWriter.write("");
-//                        segmentationWriter.flush();
-//                    } catch(IOException e) {
-//                        LOG.severe("IOException @ generateSegmentation");
-//                        e.printStackTrace();
-//                    }
-//                }
                 i++;
             }
         }

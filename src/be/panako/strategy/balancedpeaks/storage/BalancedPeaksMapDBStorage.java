@@ -1,20 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package be.panako.strategy.balancedpeaks.storage;
 
 import be.panako.cli.Panako;
+import be.panako.strategy.balancedpeaks.BalancedPeaksFingerprint;
 import be.panako.strategy.fft.FFTFingerprint;
 import be.panako.strategy.fft.storage.FFTFingerprintQueryMatch;
 import be.panako.strategy.nfft.storage.NFFTMapDBStorage;
 import be.panako.util.Config;
+import be.panako.util.FileUtils;
 import be.panako.util.Key;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.logging.Logger;
 import org.mapdb.Atomic;
@@ -51,7 +51,7 @@ public class BalancedPeaksMapDBStorage {
         File dbFile = new File(Config.get(Key.BALPEAKS_MAPDB_DATABASE));
         
         // if this application writes to storage (i.e. store) and a dbfile has not yet been created
-        if (Panako.getCurrentApplication().writesToStorage() && !dbFile.exists()) {
+        if (Panako.getCurrentApplication().writesToStorage() || !dbFile.exists()) {
             // create it
             db = DBMaker.newFileDB(dbFile)
                 .closeOnJvmShutdown() // close the database automatically
@@ -80,7 +80,6 @@ public class BalancedPeaksMapDBStorage {
             audioNameStore = db.getTreeMap(audioStore);
             balPeaksFingerprintStore = db.getTreeSet(balPeaksStore);
             secondsCounter = db.getAtomicLong("seconds_counter");
-            
         }
         // no db is really needed
         else {
@@ -102,13 +101,49 @@ public class BalancedPeaksMapDBStorage {
         return instance;
     }
     
-    public List<FFTFingerprintQueryMatch> getMatches(List<FFTFingerprint> fingerprints, int size) {
-        List<FFTFingerprintQueryMatch> matchesList = new ArrayList<>();
-        return matchesList;
+    private void checkAndCreateLock(File dbFile) {
+        // Multiple processes should not write to the same database
+        // Check for a lock and quit if there is one.
+        if (FileUtils.isFileLocked(dbFile.getAbsolutePath())) {
+            String message = "The database is locked.\nMultiple processes should not write to the same database at the same time.\n"
+                            + "If no other processes use the database, remove '"
+                            + FileUtils.getLockFileName(dbFile.getAbsolutePath())
+                            + "' manually.";
+            System.out.println(message);
+            System.err.println(message);
+            LOG.severe(message);
+            throw new RuntimeException(message);
+        }
+
+        // Create a lock, quit if there is a problem creating the lock.
+        if (!FileUtils.createLock(dbFile.getAbsolutePath())) {
+            String message = "Could not create a lock file for the database. \n"
+                            + "Please make sure that '"
+                            + FileUtils.getLockFileName(dbFile.getAbsolutePath())
+                            + "' is writable.";
+            System.out.println(message);
+            System.err.println(message);
+            LOG.severe(message);
+            throw new RuntimeException(message);
+        }
+    }
+    
+    public List<BalancedPeaksFingerprintQueryMatch> getMatches(List<BalancedPeaksFingerprint> fingerprints, int maxNumberOfMatches) {
+        Set<BalancedPeaksFingerprintQueryMatch> matchesList = new HashSet<>();
+        return null;
     }
 
     public boolean hasDescription(String description) {
         // non c'è il controllo dei duplicati nel database, per ora. TODO
         return false;
+    }
+
+    public void addAudio(int identifier, String description) {
+        audioNameStore.put(identifier, description);
+    }
+
+    public float addFingerprint(int identifier, int t1, int hash) {
+        balPeaksFingerprintStore.add(Fun.t3(hash, t1, identifier));
+        return 0.0f;
     }
 }
